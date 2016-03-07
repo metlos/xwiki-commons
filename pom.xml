@@ -48,8 +48,9 @@
          commons children anyway -->
     <commons.version>8.1-SNAPSHOT</commons.version>
 
-    <!-- The previous stable version of this project for CLIRR, used to catch API breakages. -->
-    <xwiki.clirr.previous.version>7.4.2</xwiki.clirr.previous.version>
+    <!-- The previous stable version of this project to check against for finding backward incompatibility
+         (binary and source). -->
+    <xwiki.check.previous.version>7.4.1</xwiki.check.previous.version>
 
     <!-- REST -->
     <restlet.version>2.0.14</restlet.version>
@@ -88,9 +89,10 @@
     <!-- Checkstyle -->
     <checkstyle.version>6.14.1</checkstyle.version>
 
-    <!-- By default Checkstyle, CLIRR, Enforcer and License plugins are on -->
+    <!-- By default Checkstyle, CLIRR/japicmp, Enforcer and License plugins are on -->
     <xwiki.checkstyle.skip>false</xwiki.checkstyle.skip>
     <xwiki.clirr.skip>false</xwiki.clirr.skip>
+    <xwiki.japicmp.skip>false</xwiki.japicmp.skip>
     <xwiki.enforcer.skip>false</xwiki.enforcer.skip>
     <xwiki.license.skip>false</xwiki.license.skip>
 
@@ -920,8 +922,8 @@ XWiki uses SLF4J for logging. Don't use Commons Logging or Log4J.
           <!-- Lock down plugin version for build reproducibility -->
           <version>3.2</version>
           <configuration>
-            <source>1.7</source>
-            <target>1.7</target>
+            <source>1.8</source>
+            <target>1.8</target>
           </configuration>
           <executions>
             <!-- We need custom sourcepaths for our Component Annotation Process work
@@ -1027,9 +1029,9 @@ XWiki uses SLF4J for logging. Don't use Commons Logging or Log4J.
           <!-- Lock down plugin version for build reproducibility -->
           <version>1.8</version>
           <configuration>
-            <complianceLevel>1.7</complianceLevel>
-            <source>1.7</source>
-            <target>1.7</target>
+            <complianceLevel>1.8</complianceLevel>
+            <source>1.8</source>
+            <target>1.8</target>
           </configuration>
           <!-- Override so that we can use the AspectJ version we wish -->
           <dependencies>
@@ -1102,12 +1104,93 @@ XWiki uses SLF4J for logging. Don't use Commons Logging or Log4J.
             </execution>
           </executions>
           <configuration>
-            <comparisonVersion>${xwiki.clirr.previous.version}</comparisonVersion>
+            <comparisonVersion>${xwiki.check.previous.version}</comparisonVersion>
             <skip>${xwiki.clirr.skip}</skip>
             <excludes>
               <exclude>**/internal/**</exclude>
             </excludes>
           </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>com.google.code.findbugs</groupId>
+              <artifactId>bcel-findbugs</artifactId>
+              <version>6.0</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <!-- Used for checking backward compatibility (binary and source) -->
+        <plugin>
+          <groupId>com.github.siom79.japicmp</groupId>
+          <artifactId>japicmp-maven-plugin</artifactId>
+          <!-- Lock down plugin version for build reproducibility -->
+          <version>0.7.1-SNAPSHOT</version>
+          <configuration>
+            <oldVersion>
+              <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>${project.artifactId}</artifactId>
+                <version>${xwiki.check.previous.version}</version>
+              </dependency>
+            </oldVersion>
+            <newVersion>
+              <file>
+                <path>${project.build.directory}/${project.artifactId}-${project.version}.jar</path>
+              </file>
+            </newVersion>
+            <parameter>
+              <onlyModified>true</onlyModified>
+              <accessModifier>protected</accessModifier>
+              <breakBuildOnModifications>false</breakBuildOnModifications>
+              <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
+              <breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
+              <onlyBinaryIncompatible>false</onlyBinaryIncompatible>
+              <includeSynthetic>false</includeSynthetic>
+              <ignoreMissingClasses>false</ignoreMissingClasses>
+              <excludes>
+                <exclude>*.internal.*</exclude>
+                <exclude>*.test.*</exclude>
+              </excludes>
+            </parameter>
+            <skip>${xwiki.japicmp.skip}</skip>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>verify</phase>
+              <goals>
+                <goal>cmp</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.revapi</groupId>
+          <artifactId>revapi-maven-plugin</artifactId>
+          <version>0.4.1</version>
+          <configuration>
+            <oldArtifacts>
+              <artifact>${project.groupId}:${project.artifactId}:${xwiki.check.previous.version}</artifact>
+            </oldArtifacts>
+            <analysisConfiguration><![CDATA[
+      {
+        "revapi": {
+          "filter": {
+            "archives": {
+              "exclude": [".*\\.internal\\..*:.*"],
+              "exclude": [".*\\.test\\..*:.*"]
+            }
+          }
+        }
+      }
+    ]]></analysisConfiguration>
+            <failSeverity>potentiallyBreaking</failSeverity>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1328,8 +1411,8 @@ mm
                 <configuration>
                   <rules>
                     <requireJavaVersion>
-                      <message>You must release with Java 7!</message>
-                      <version>[1.7, 1.8)</version>
+                      <message>You must release with Java 8!</message>
+                      <version>[1.8, 1.9)</version>
                     </requireJavaVersion>
                   </rules>
                 </configuration>
@@ -1383,6 +1466,9 @@ mm
         <xwiki.checkstyle.skip>true</xwiki.checkstyle.skip>
         <!-- Skip Clirr since we don't need it when computing test coverage and it speeds up the build not to run it -->
         <xwiki.clirr.skip>true</xwiki.clirr.skip>
+        <!-- Skip japicpm since we don't need it when computing test coverage and it speeds up the build not to run
+             it -->
+        <xwiki.japicmp.skip>true</xwiki.japicmp.skip>
         <!-- Skip Enforcer since we don't need it for coverage and it speeds up the build not to run it -->
         <xwiki.enforcer.skip>true</xwiki.enforcer.skip>
       </properties>

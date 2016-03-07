@@ -158,66 +158,30 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
+        <groupId>com.github.siom79.japicmp</groupId>
+        <artifactId>japicmp-maven-plugin</artifactId>
         <configuration>
-          <!-- List of specific CLIRR excludes. Example:
-
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/ircbot/IRCBot</className>
-              <method>void initialize(java.lang.String)</method>
-              <justification>IRCBot is still a young API. Added a new initialize() method to support installing the
-              IRC Bot application in a subwiki</justification>
-            </difference>
-
-            See http://www.mojohaus.org/clirr-maven-plugin/examples/ignored-differences.html
-          -->
-          <ignored>
-            <!-- Remove the following ignores after we release the current version as final -->
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>org.xwiki.extension.ExtensionId getExtensionFeature(java.lang.String)</method>
-              <justification>Allow associating a version different from the extension version to the features</justification>
-            </difference>
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>java.util.Collection getExtensionFeatures()</method>
-              <justification>Allow associating a version different from the extension version to the features</justification>
-            </difference>
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>java.util.Collection getAllowedNamespaces()</method>
-              <justification>Allow indicating namespace constraint in an extension</justification>
-            </difference>
-            <difference>
-              <differenceType>6001</differenceType>
-              <className>org/xwiki/velocity/introspection/AbstractChainableUberspector</className>
-              <field>inner</field>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-            <difference>
-              <differenceType>4001</differenceType>
-              <className>org/xwiki/velocity/introspection/*Uberspector</className>
-              <to>org/xwiki/velocity/introspection/ChainableUberspector</to>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-            <difference>
-              <differenceType>5001</differenceType>
-              <className>org/xwiki/velocity/introspection/*Uberspector</className>
-              <to>org/xwiki/velocity/introspection/AbstractChainableUberspector</to>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-          </ignored>
-          <excludes>
-            <exclude>**/internal/**</exclude>
-            <exclude>**/test/**</exclude>
-            <!-- Remove the following excludes after we release the current version as final -->
-          </excludes>
+          <parameter>
+            <excludes combine.children="append">
+              <!--Broken for adding new features:
+                  - Allow associating a version different from the extension version to the features
+                  - Allow indicating namespace constraint in an extension
+              -->
+              <exclude>org.xwiki.extension.Extension</exclude>
+              <!-- Starting to use the Velocity-provided chaining classes instead of our own now that
+                   the patch provided by XWiki has been integrated into Velocity -->
+              <exclude>org.xwiki.velocity.introspection.AbstractChainableUberspector</exclude>
+              <exclude>org.xwiki.velocity.introspection.ChainingUberspector</exclude>
+              <exclude>org.xwiki.velocity.introspection.ChainableUberspector</exclude>
+              <exclude>org.xwiki.velocity.introspection.DeprecatedCheckUberspector</exclude>
+              <exclude>org.xwiki.velocity.introspection.MethodArgumentsUberspector</exclude>
+            </excludes>
+          </parameter>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.revapi</groupId>
+        <artifactId>revapi-maven-plugin</artifactId>
       </plugin>
       <!-- Verify that unit tests don't output anything to stdout/stderr -->
       <plugin>
