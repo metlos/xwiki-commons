@@ -158,8 +158,8 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
+        <groupId>org.revapi</groupId>
+        <artifactId>revapi-maven-plugin</artifactId>
         <configuration>
           <!-- List of specific CLIRR excludes. Example:
 
@@ -173,50 +173,56 @@
 
             See http://www.mojohaus.org/clirr-maven-plugin/examples/ignored-differences.html
           -->
-          <ignored>
-            <!-- Remove the following ignores after we release the current version as final -->
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>org.xwiki.extension.ExtensionId getExtensionFeature(java.lang.String)</method>
-              <justification>Allow associating a version different from the extension version to the features</justification>
-            </difference>
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>java.util.Collection getExtensionFeatures()</method>
-              <justification>Allow associating a version different from the extension version to the features</justification>
-            </difference>
-            <difference>
-              <differenceType>7012</differenceType>
-              <className>org/xwiki/extension/Extension</className>
-              <method>java.util.Collection getAllowedNamespaces()</method>
-              <justification>Allow indicating namespace constraint in an extension</justification>
-            </difference>
-            <difference>
-              <differenceType>6001</differenceType>
-              <className>org/xwiki/velocity/introspection/AbstractChainableUberspector</className>
-              <field>inner</field>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-            <difference>
-              <differenceType>4001</differenceType>
-              <className>org/xwiki/velocity/introspection/*Uberspector</className>
-              <to>org/xwiki/velocity/introspection/ChainableUberspector</to>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-            <difference>
-              <differenceType>5001</differenceType>
-              <className>org/xwiki/velocity/introspection/*Uberspector</className>
-              <to>org/xwiki/velocity/introspection/AbstractChainableUberspector</to>
-              <justification>Deprecating this class in favor of the standard library class with the same name</justification>
-            </difference>
-          </ignored>
-          <excludes>
-            <exclude>**/internal/**</exclude>
-            <exclude>**/test/**</exclude>
-            <!-- Remove the following excludes after we release the current version as final -->
-          </excludes>
+          <analysisConfiguration><![CDATA[
+            {
+              "revapi": {
+                "filter": {
+                  "elements": {
+                     "exclude": [".*\\.internal\\..*", ".*\\.test\\..*"]
+                  }
+                },
+                "ignore": [
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method java.util.Collection<java.lang.String> org.xwiki.extension.Extension::getAllowedNamespaces()",
+                    "justification": "Allow indicating namespace constraint in an extension"
+                  },
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method org.xwiki.extension.ExtensionId org.xwiki.extension.Extension::getExtensionFeature(java.lang.String)",
+                    "justification": "Allow associating a version different from the extension version to the features"
+                  },
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method java.util.Collection<org.xwiki.extension.ExtensionId> org.xwiki.extension.Extension::getExtensionFeatures()",
+                    "justification": "Allow associating a version different from the extension version to the features"
+                  },
+                  {
+                    "code": "java.field.removed",
+                    "old": "field org.xwiki.velocity.introspection.AbstractChainableUberspector.inner",
+                    "justification": "Deprecating this class in favor of the standard library class with the same name"
+                  },
+                  {
+                    "code": "java.method.removed",
+                    "old": "method void org.xwiki.velocity.introspection.ChainableUberspector::wrap(org.apache.velocity.util.introspection.Uberspect)",
+                    "justification": "Deprecating this class in favor of the standard library class with the same name"
+                  },
+                  {
+                    "code": "java.class.noLongerInheritsFromClass",
+                    "old": "class org.xwiki.velocity.introspection.DeprecatedCheckUberspector",
+                    "new": "class org.xwiki.velocity.introspection.DeprecatedCheckUberspector",
+                    "justification": "Deprecating this class in favor of the standard library class with the same name"
+                  },
+                  {
+                    "code": "java.class.noLongerInheritsFromClass",
+                    "old": "class org.xwiki.velocity.introspection.MethodArgumentsUberspector",
+                    "new": "class org.xwiki.velocity.introspection.MethodArgumentsUberspector",
+                    "justification": "Deprecating this class in favor of the standard library class with the same name"
+                  }
+                ]
+              }
+            }
+          ]]></analysisConfiguration>
         </configuration>
       </plugin>
       <!-- Verify that unit tests don't output anything to stdout/stderr -->
