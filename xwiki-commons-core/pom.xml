@@ -163,6 +163,16 @@
                   }
                 },
                 "ignore": [
+		  {
+                    "code": "java.annotation.removed",
+                    "annotationType": "org.xwiki.stability.Unstable",
+                    "justification": "These are marker annotations that have no semantical consequences."
+                  },
+                  {
+                    "code": "java.annotation.added",
+                    "annotationType": "org.xwiki.stability.Unstable",
+                    "justification": "These are marker annotations that have no semantical consequences."
+                  }
                 ]
               }
             }
